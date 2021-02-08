@@ -14,8 +14,8 @@
  * limitations under the License.
  *
  * author: kevin.chen@rock-chips.com
- *   date: 2021/01/28
  * module: native-codec: native_enc_test sample code
+ * date  : 2021/01/28
  */
 
 //#define LOG_NDEBUG 0
@@ -228,21 +228,22 @@ status_t testSetupCodec(EncTestArgs *data) {
 
 status_t testEncRun(EncTestArgs *data) {
     status_t err;
-    int32_t pkt_size, read_size;
-    char *pkt_buf = NULL;
+    int32_t pktsize, readsize;
+    char *pktBuf = NULL;
     size_t index;
+
     bool lastPktQueued = true;
     bool sawInputEOS = false;
     bool signalledInputEOS = false, signalledOutputEOS = false;
 
     // YUV420SP input deault
-    pkt_size = data->width * data->height * 3 / 2;
-    pkt_buf = (char*)malloc(sizeof(char) * pkt_size);
+    pktsize = data->width * data->height * 3 / 2;
+    pktBuf = (char*)malloc(sizeof(char) * pkt_size);
 
     while (true) {
         if (!sawInputEOS && lastPktQueued) {
-            read_size = fread(pkt_buf, 1, pkt_size, data->fp_input);
-            if (read_size != pkt_size && feof(data->fp_input)) {
+            readsize = fread(pktBuf, 1, pktsize, data->fp_input);
+            if (readsize != pktsize && feof(data->fp_input)) {
                 ALOGD("saw input eos");
                 sawInputEOS = true;
             }
@@ -255,8 +256,8 @@ status_t testEncRun(EncTestArgs *data) {
             if (err == OK) {
                 ALOGV("filling input buffer %zu", index);
                 const sp<ABuffer> &buffer = data->inBuffers.itemAt(index);
-                memcpy(buffer->base(), pkt_buf, read_size);
-                buffer->setRange(0, read_size);
+                memcpy(buffer->base(), pktBuf, readsize);
+                buffer->setRange(0, readsize);
 
                 err = data->codec->queueInputBuffer(index, 0, buffer->size(), 0, 0);
 
@@ -319,7 +320,7 @@ status_t testEncRun(EncTestArgs *data) {
             break;
     }
 
-    free(pkt_buf);
+    free(pktBuf);
 
     return 0;
 }

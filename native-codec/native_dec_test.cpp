@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * author: kevin.chen@rock-chips.com
- *   date: 2021/02/03
+ * date  : 2021/02/03
  * module: native-codec: native_dec_test sample code
  */
 
@@ -273,12 +273,10 @@ status_t testDecRunRawInput(CodecState *state) {
     bool renderSurface = (state->mSurface != NULL);
 
     FILE *fpInput = NULL, *fpOutput = NULL;
-    bool sawInputEOS = false;
-    bool lastPktQueued = true;
-    char *pkt_buf = NULL;
-    int32_t pkt_size = 1000; // 1000byte
+    char *pktBuf = NULL;
+    int32_t pktsize = 1000; // 1000 byte
 
-    pkt_buf = (char*)malloc(sizeof(char) * pkt_size);
+    pktBuf = (char*)malloc(sizeof(char) * pktsize);
 
     fpInput = fopen(state->mFileInput, "rb+");
     if (fpInput == NULL) {
@@ -296,11 +294,15 @@ status_t testDecRunRawInput(CodecState *state) {
         }
     }
 
-    int32_t read_size;
+    bool sawInputEOS = false;
+    // Indicates that the last buffer has delivered into vpu_decoder
+    bool lastPktQueued = true;
+    int32_t readsize;
+
     while (true) {
         if (!sawInputEOS && lastPktQueued) {
-            read_size = fread(pkt_buf, 1, pkt_size, fpInput);
-            if (read_size != pkt_size && feof(fpInput)) {
+            readsize = fread(pktBuf, 1, pktsize, fpInput);
+            if (readsize != pktsize && feof(fpInput)) {
                 ALOGD("saw input eos");
                 sawInputEOS = true;
             }
@@ -315,8 +317,8 @@ status_t testDecRunRawInput(CodecState *state) {
                 ALOGV("filling input buffer %zu", index);
                 const sp<ABuffer> &buffer = state->mInBuffers.itemAt(index);
 
-                memcpy(buffer->base(), pkt_buf, read_size);
-                buffer->setRange(0, read_size);
+                memcpy(buffer->base(), pktBuf, readsize);
+                buffer->setRange(0, readsize);
 
                 uint32_t bufferFlags = 0;
                 err = state->mCodec->queueInputBuffer(
@@ -408,7 +410,7 @@ status_t testDecRunRawInput(CodecState *state) {
 DECODE_OUT:
     state->mCodec->release();
 
-    free(pkt_buf);
+    free(pktBuf);
 
     if (fpInput != NULL)
         fclose(fpInput);
