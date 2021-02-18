@@ -58,20 +58,31 @@
       - VpuCodecContext->encoder_sendframe | VpuCodecContext->encoder_getstream
         往编码器中异步存取数据
 
-    2) 范例说明
+    2) RKHWDecApi
         rkvpu_dec_api-RKHWDecApi 为可参考的 VpuApiLegacy 接口 decoder 设计，rkvpu_dec_test.cpp
-        为 RKHWDecApi 使用范例，可参考这两个文件进行硬解码器设计.
+        为 RKHWDecApi 使用范例，可参考这两个文件进行硬解码器设计。
 
         - 解码器输出 NV12 格式
         - 平台硬解码器只能处理对齐过的 buffer，因此 RKHWDecApi 输出的 YUV buffer 也是经过对齐的，
         返回的 VPU_FRAME 句柄中，FrameWidth 为对齐过的 buffer 宽度(horizontal stride)，DisplayWidth
         为实际图像的大小，如果这两者不匹配也就是非对齐的分辨率，直接显示可能出现绿边的情况，因此
         非对齐分辨率需经过外部裁剪才能正常显示。
-        - VPU_FRAME 在解码库内部循环使用，在解码显示完成之后记得使用 deinitOutFrame 解除使用状态.
+        - VPU_FRAME 在解码库内部循环使用，在解码显示完成之后记得使用 deinitOutFrame 解除使用状态。
 
         bin 测试使用:
             rkvpu_dec_test --i input.h264 --o out.yuv --w 1280 --h 720 --t 1
             (--t 1 为 h264 解码，--t 2 为 h265 解码)
+
+    2) RKHWEncApi
+        rkvpu_enc_api-RKHWEncApi 为可参考的 VpuApiLegacy 接口 encoder 设计，rkvpu_enc_test.cpp
+        为 RKHWEncApi 使用范例，可参考这两个文件进行硬编码器设计。
+
+        相较于 native MediaCodec 接口，RKHWEncApi 直接与底层编码库交互(省去通路上的时间消耗)，并支
+        持更多编码细节的控制。如 gop 长度、cabac 模式、profile level、RateControl 码率控制等。
+
+        bin 测试使用:
+            rkvpu_enc_test --i input.yuv --o out.h264 --w 1280 --h 720
+            (默认设计 input-yuv420sp output-h264，具体芯片编码能力请查阅 datasheet 修改)
 
 4. mpp-codec
     rockchip 提供的媒体处理软件平台(Media Process Platform，简称 MPP)，是适用于所有芯片系列的
