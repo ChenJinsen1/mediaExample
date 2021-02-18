@@ -18,7 +18,7 @@
  * date  : 2021/02/07
  */
 
-#define LOG_NDEBUG 0
+// #define LOG_NDEBUG 0
 #define LOG_TAG "RKHWDecApi"
 #include <utils/Log.h>
 
@@ -34,12 +34,14 @@ RKHWDecApi::RKHWDecApi()
 
     mVpuCtx = NULL;
     mInitOK = 0;
+    mFrameCount = 0;
 }
 
 RKHWDecApi::~RKHWDecApi()
 {
     ALOGV("RKHWDecApi destructor");
 
+    mVpuCtx->flush(mVpuCtx);
     if (mVpuCtx != NULL) {
         vpu_close_context(&mVpuCtx);
         free(mVpuCtx);
@@ -48,7 +50,7 @@ RKHWDecApi::~RKHWDecApi()
 }
 
 VPU_RET RKHWDecApi::prepare(int32_t width, int32_t height,
-                              OMX_RK_VIDEO_CODINGTYPE coding)
+                            OMX_RK_VIDEO_CODINGTYPE coding)
 {
     int32_t ret;
 
@@ -100,11 +102,11 @@ VPU_RET RKHWDecApi::sendStream(char *data, int32_t size, int64_t pts, int32_t fl
     pkt.data = (unsigned char*)data;
     pkt.size = size;
     if (pts > 0) {
-       pkt.pts = pts;
-       pkt.dts = pts;
+        pkt.pts = pts;
+        pkt.dts = pts;
     } else {
-       pkt.pts = VPU_API_NOPTS_VALUE;
-       pkt.dts = VPU_API_NOPTS_VALUE;
+        pkt.pts = VPU_API_NOPTS_VALUE;
+        pkt.dts = VPU_API_NOPTS_VALUE;
     }
     pkt.nFlags = flag;
 
@@ -137,7 +139,6 @@ VPU_RET RKHWDecApi::getOutFrame(VPU_FRAME *vframe)
     decOut.data = (unsigned char*)vframe;
 
     ret = mVpuCtx->decode_getframe(mVpuCtx, &decOut);
-
     if (ret < 0) {
         if (ret == VPU_API_EOS_STREAM_REACHED && !vframe->ErrorInfo) {
             return VPU_EOS_STREAM_REACHED;
@@ -148,9 +149,10 @@ VPU_RET RKHWDecApi::getOutFrame(VPU_FRAME *vframe)
     }
 
     if (decOut.size > 0) {
-        ALOGD("get one fd 0x%x dimen %dx%d(%dx%d) errinfo %x pts %lld",
-              vframe->vpumem.phy_addr,vframe->FrameWidth, vframe->FrameHeight,
-              vframe->DisplayWidth, vframe->DisplayHeight,
+        mFrameCount++;
+        ALOGD("get frame_num %d fd 0x%x dimen %dx%d(%dx%d) errinfo %x pts %lld",
+              mFrameCount, vframe->vpumem.phy_addr, vframe->FrameWidth,
+              vframe->FrameHeight, vframe->DisplayWidth, vframe->DisplayHeight,
               vframe->ErrorInfo, (long long)vframe->ShowTime.TimeLow);
 
         return VPU_OK;
@@ -166,4 +168,3 @@ void RKHWDecApi::deinitOutFrame(VPU_FRAME *vframe)
         VPUFreeLinear(&vframe->vpumem);
     }
 }
-

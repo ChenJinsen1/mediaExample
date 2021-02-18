@@ -69,7 +69,8 @@ typedef struct DecTestCtx_t {
 /*
  * Dumps usage on stderr.
  */
-static void testUsage() {
+static void testUsage()
+{
     fprintf(stderr,
         "\nUsage: rkvpu_dec_test [options] \n"
         "Rockchip VpuApiLegacy decoder demo.\n"
@@ -93,7 +94,8 @@ static void testUsage() {
         "\n");
 }
 
-VPU_RET testParseArgs(DecTestCtx *ctx, int argc, char **argv) {
+VPU_RET testParseArgs(DecTestCtx *ctx, int argc, char **argv)
+{
     static const struct option longOptions[] = {
         { "usage",              no_argument,        NULL, 'u' },
         { "input",              required_argument,  NULL, 'i' },
@@ -166,7 +168,6 @@ VPU_RET testParseArgs(DecTestCtx *ctx, int argc, char **argv) {
     return VPU_OK;
 }
 
-
 VPU_RET runDecoder(RKHWDecApi *decApi, DecTestCtx *decCtx)
 {
     VPU_RET ret = VPU_OK;
@@ -174,14 +175,14 @@ VPU_RET runDecoder(RKHWDecApi *decApi, DecTestCtx *decCtx)
     char *pktBuf = NULL;
     int32_t pktsize = 1000; // 1000 byte
 
-    bool sawInputEOS = false;
+    bool sawInputEOS = false, signalledInputEOS = false;
     // Indicates that the last buffer has delivered to vpu_decoder
     bool lastPktQueued = true;
     int32_t readsize;
 
-    // input and output dst
     pktBuf = (char*)malloc(sizeof(char) * pktsize);
 
+    // input and output dst
     fpInput = fopen(decCtx->fileInput, "rb+");
     if (fpInput == NULL) {
         fprintf(stderr, "failed to open input file %s\n", decCtx->fileInput);
@@ -217,11 +218,14 @@ VPU_RET runDecoder(RKHWDecApi *decApi, DecTestCtx *decCtx)
                 usleep(1000);
             }
         } else {
-            ret = decApi->sendStream(pktBuf, readsize, 0, OMX_BUFFERFLAG_EOS);
-            if (!ret) {
-                lastPktQueued = true;
-            } else {
-                usleep(1000);
+            if (!signalledInputEOS) {
+                ret = decApi->sendStream(pktBuf, readsize, 0, OMX_BUFFERFLAG_EOS);
+                if (ret == VPU_OK) {
+                    lastPktQueued = true;
+                    signalledInputEOS = true;
+                } else {
+                    usleep(1000);
+                }
             }
         }
 
@@ -263,13 +267,14 @@ DECODE_OUT:
     return ret;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     VPU_RET ret = VPU_OK;
     DecTestCtx decCtx;
     RKHWDecApi decApi;
 
     // parse the cmd option
-    if (argc > 1)
+    if (argc > 0)
         ret = testParseArgs(&decCtx, argc, argv);
 
     if (ret != VPU_OK) {

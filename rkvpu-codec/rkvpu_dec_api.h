@@ -66,6 +66,7 @@ public:
 private:
     VpuCodecContext *mVpuCtx;
     int32_t mInitOK;
+    int32_t mFrameCount;
 };
 
 #endif  // __RKVPU_DEC_API_H__

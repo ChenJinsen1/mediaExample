@@ -2,7 +2,8 @@
     mediaExample 为 rockchip Andorid 平台硬编解码 demo 仓库，提供了几种不同层次的硬编解码
     使用接口，给 media 工程师设计使用参考。包括:
       - /native-codec/ - Android native 层 MediaCodec 使用范例
-      - /rkvpu-codec/ - 基于 vpu 直接调用 rockchip 硬件编解码库使用范例
+      - /rkvpu-codec/  - 基于 vpu 直接调用 rockchip 硬件编解码库使用范例
+      - /mpp-codec/    - Media Process Platform 开发文档 
 
 2. native-codec
     native-codec 为使用 Android 平台 native MediaCodec 设计的编解码接口使用范例，主要包括
