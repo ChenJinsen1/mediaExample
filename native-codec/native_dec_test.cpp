@@ -276,6 +276,11 @@ status_t testDecRunRawInput(CodecState *state) {
     char *pktBuf = NULL;
     int32_t pktsize = 1000; // 1000 byte
 
+    bool sawInputEOS = false;
+    // Indicates that the last buffer has delivered into vpu_decoder
+    bool lastPktQueued = true;
+    int32_t readsize;
+
     pktBuf = (char*)malloc(sizeof(char) * pktsize);
 
     fpInput = fopen(state->mFileInput, "rb+");
@@ -293,11 +298,6 @@ status_t testDecRunRawInput(CodecState *state) {
             goto DECODE_OUT;
         }
     }
-
-    bool sawInputEOS = false;
-    // Indicates that the last buffer has delivered into vpu_decoder
-    bool lastPktQueued = true;
-    int32_t readsize;
 
     while (true) {
         if (!sawInputEOS && lastPktQueued) {

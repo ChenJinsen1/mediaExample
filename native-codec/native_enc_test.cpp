@@ -238,7 +238,7 @@ status_t testEncRun(EncTestArgs *data) {
 
     // YUV420SP input deault
     pktsize = data->width * data->height * 3 / 2;
-    pktBuf = (char*)malloc(sizeof(char) * pkt_size);
+    pktBuf = (char*)malloc(sizeof(char) * pktsize);
 
     while (true) {
         if (!sawInputEOS && lastPktQueued) {
