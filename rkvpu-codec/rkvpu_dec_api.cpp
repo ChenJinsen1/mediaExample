@@ -68,16 +68,16 @@ VPU_RET RKHWDecApi::prepare(int32_t width, int32_t height,
     mVpuCtx->extradata = NULL;
     mVpuCtx->extradata_size = 0;
 
+    // keep the vpu split mode open if we can't make sure a complete
+    // frame will be sent each time.
+    int32_t split = 1;
+    mVpuCtx->control(mVpuCtx, VPU_API_SET_PARSER_SPLIT_MODE, (void*)&split);
+
     ret = mVpuCtx->init(mVpuCtx, NULL, 0);
     if (ret) {
         ALOGE("ERROR: faild to init vpuCtx(err=%d)", ret);
         return VPU_ERR_INIT;
     }
-
-    // keep the vpu split mode open if we can't make sure a complete
-    // frame will be sent each time.
-    int32_t split = 1;
-    mVpuCtx->control(mVpuCtx, VPU_API_SET_PARSER_SPLIT_MODE, (void*)&split);
 
     mInitOK = 1;
 
